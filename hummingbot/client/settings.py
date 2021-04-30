@@ -137,20 +137,27 @@ def _create_connector_settings() -> Dict[str, ConnectorSetting]:
             other_domains = getattr(util_module, "OTHER_DOMAINS", [])
             for domain in other_domains:
                 parent = connector_settings[connector_dir.name]
+
+                fee_type = parent.fee_type
+                fee_type_setting = getattr(util_module, "OTHER_DOMAINS_FEE_TYPE", None)[domain]
+                if fee_type_setting is not None:
+                    fee_type = TradeFeeType[fee_type_setting]
+
                 connector_settings[domain] = ConnectorSetting(
                     name=domain,
                     type=parent.type,
                     centralised=parent.centralised,
                     example_pair=getattr(util_module, "OTHER_DOMAINS_EXAMPLE_PAIR")[domain],
-                    use_evm=parent.use_evm,
-                    fee_type=parent.fee_type,
-                    fee_token=parent.fee_token,
+                    use_evm=getattr(util_module, "OTHER_DOMAINS_USE_EVM", parent.use_evm)[domain],
+                    fee_type=fee_type,
+                    fee_token=getattr(util_module, "OTHER_DOMAINS_FEE_TOKEN", parent.fee_token)[domain],
                     default_fees=getattr(util_module, "OTHER_DOMAINS_DEFAULT_FEES")[domain],
                     config_keys=getattr(util_module, "OTHER_DOMAINS_KEYS")[domain],
                     is_sub_domain=True,
                     parent_name=parent.name,
                     domain_parameter=getattr(util_module, "OTHER_DOMAINS_PARAMETER")[domain],
-                    use_eth_gas_lookup=parent.use_eth_gas_lookup
+                    use_eth_gas_lookup=getattr(util_module, "OTHER_DOMAINS_USE_ETH_GAS_LOOKUP",
+                                               parent.use_eth_gas_lookup)[domain]
                 )
     return connector_settings
 
