@@ -125,7 +125,6 @@ class UserBalances:
         #                                     get_eth_wallet_private_key(),
         #                                     evm_rpc_url.value)
         # else:
-
         # Todo: Use generic ERC20 balance update
         connector = BalancerConnector(ethereum_required_trading_pairs(),
                                       get_eth_wallet_private_key(),
