@@ -197,13 +197,16 @@ main_config_map = {
                   type_str="int",
                   validator=lambda v: validate_int(v, min_value=0, inclusive=False),
                   default=None),
-
     "evm_token_list_url":
         ConfigVar(key="evm_token_list_url",
                   prompt="Specify EVM-compatible token list url of a list available on https://tokenlists.org/ >>> ",
                   type_str="str",
                   required_if=lambda: global_config_map["evm_rpc_ws_url"].value is not None),
-
+    "token_list_urls":
+        ConfigVar(key="token_list_urls",
+                  prompt="List of tokens >>> ",
+                  type_str="json",
+                  required_if=lambda: True),
     # Whether or not to invoke cancel_all on exit if marketing making on a open order book DEX (e.g. Radar Relay)
     "on_chain_cancel_on_exit":
         ConfigVar(key="on_chain_cancel_on_exit",

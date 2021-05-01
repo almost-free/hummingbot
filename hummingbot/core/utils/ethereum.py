@@ -76,8 +76,9 @@ def check_transaction_exceptions(trade_data: dict) -> dict:
 
 
 @async_ttl_cache(ttl=30)
-async def fetch_trading_pairs(prefix = "ethereum") -> List[str]:
-    token_list_url = global_config_map.get(f"{prefix}_token_list_url").value
+async def fetch_trading_pairs(domain: str = "ethereum") -> List[str]:
+    url_map = global_config_map.get("token_list_urls").value
+    token_list_url = url_map[domain]
     tokens = set()
     async with aiohttp.ClientSession() as client:
         resp = await client.get(token_list_url)

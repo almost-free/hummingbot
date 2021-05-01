@@ -97,8 +97,8 @@ class UniswapConnector(ConnectorBase):
         return "uniswap"
 
     @staticmethod
-    async def fetch_trading_pairs() -> List[str]:
-        return await fetch_trading_pairs()
+    async def fetch_trading_pairs(domain: str = "ethereum") -> List[str]:
+        return await fetch_trading_pairs(domain)
 
     @property
     def limit_orders(self) -> List[LimitOrder]:

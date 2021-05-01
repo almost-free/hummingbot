@@ -97,8 +97,8 @@ class EvmUniswapConnector(ConnectorBase):
         return "evm_uniswap"
 
     @staticmethod
-    async def fetch_trading_pairs() -> List[str]:
-        return await fetch_trading_pairs("evm")
+    async def fetch_trading_pairs(domain: str = "evm") -> List[str]:
+        return await fetch_trading_pairs(domain)
 
     @property
     def limit_orders(self) -> List[LimitOrder]:
