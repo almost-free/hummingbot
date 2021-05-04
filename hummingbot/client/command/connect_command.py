@@ -158,10 +158,6 @@ class ConnectCommand:
 
         if reconfigure_answer.lower() in ("yes", "y"):
 
-            # TODO: Prompt for the map ConfigVar too?
-            # if global_config_map.get().value is None:
-            # self.prompt_a_config(global_config_map[])
-
             if domain not in rpc_url_map:
                 answer = await self.app.prompt(prompt=f"Please enter an RPC URL for ${domain} >>> ")
                 rpc_url_map[domain] = answer

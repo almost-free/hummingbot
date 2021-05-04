@@ -117,7 +117,7 @@ class UserBalances:
 
     @staticmethod
     async def eth_n_erc20_balances(domain = "ethereum") -> Dict[str, Decimal]:
-        evm_rpc_url = global_config_map.get("rpc_urls").value[domain].value
+        evm_rpc_url = global_config_map.get("rpc_urls").value[domain]
         # if prefix == "evm":
         #     connector = EvmUniswapConnector(ethereum_required_trading_pairs,
         #                                     get_eth_wallet_private_key(),

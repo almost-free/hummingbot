@@ -9,6 +9,7 @@ from hummingbot.client.config.config_helpers import (
     save_to_yml
 )
 from hummingbot.client.config.config_validators import validate_decimal, validate_exchange
+from hummingbot.client.settings import EVM_CONNECTORS, ethereum_required
 from hummingbot.market.celo.celo_cli import CeloCLI
 from hummingbot.client.performance import smart_round
 from hummingbot.core.rate_oracle.rate_oracle import RateOracle
@@ -116,27 +117,23 @@ class BalanceCommand:
 
         eth_address = global_config_map["ethereum_wallet"].value
         if eth_address is not None:
-            if "ethereum" in global_config_map["rpc_urls"].value:
+            if ethereum_required():
                 eth_df = await self.ethereum_balances_df()
                 lines = ["    " + line for line in eth_df.to_string(index=False).split("\n")]
                 self._notify("\nethereum:")
                 self._notify("\n".join(lines))
 
-            # TODO: Iterate global_config_map["rpc_urls"] instead, or chains from CONNECTOR_SETTINGS
-            # Pass actual domain to evm_balances_df
-
-            if "evm_rpc_url" in global_config_map:
-                evm_chain = global_config_map.get("evm_chain")
-                evm_df = await self.evm_balances_df("evm")
+            domains = [c.domain_parameter for c in EVM_CONNECTORS if c.use_evm != "ethereum" and c.is_sub_domain]
+            for domain in domains:
+                evm_chain = global_config_map.get("chains").value[domain]
+                # TODO:
+                if domain == "xdai":
+                    evm_df = await self.xdai_balances_df()
+                else:
+                    evm_df = await self.evm_balances_df(domain)
                 lines = ["    " + line for line in evm_df.to_string(index=False).split("\n")]
-                self._notify(f"\nevm ({evm_chain.value}):")
+                self._notify(f"\n${domain} ({evm_chain}):")
                 self._notify("\n".join(lines))
-
-            # XDAI balances
-            xdai_df = await self.xdai_balances_df()
-            lines = ["    " + line for line in xdai_df.to_string(index=False).split("\n")]
-            self._notify("\nxdai:")
-            self._notify("\n".join(lines))
 
     async def exchange_balances_extra_df(self,  # type: HummingbotApplication
                                          ex_balances: Dict[str, Decimal],
