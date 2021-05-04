@@ -30,8 +30,7 @@ connector_status = {
     'probit': 'yellow',
     'probit_kr': 'yellow',
     'terra': 'green',
-    'uniswap': 'green',
-    'evm_uniswap': 'yellow'
+    'uniswap': 'green'
 }
 
 warning_messages = {

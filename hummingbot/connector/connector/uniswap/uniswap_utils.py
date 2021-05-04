@@ -1,5 +1,3 @@
-from hummingbot.client.config.config_var import ConfigVar
-from hummingbot.client.settings import required_exchanges
 
 CENTRALIZED = False
 EXAMPLE_PAIR = "WETH-DAI"
@@ -20,17 +18,4 @@ OTHER_DOMAINS_USE_EVM = {"uniswap_xdai": "evm"}
 OTHER_DOMAINS_FEE_TYPE = {"uniswap_xdai": "FlatFee"}
 OTHER_DOMAINS_FEE_TOKEN = {"uniswap_xdai": ""}  # TODO ****
 OTHER_DOMAINS_USE_ETH_GAS_LOOKUP = {"uniswap_xdai": False}
-OTHER_DOMAINS_KEYS = {"uniswap_xdai": {
-    "uniswap_xdai_wallet_address":
-        ConfigVar(key="uniswap_xdai_wallet_address",
-                  prompt="Enter your xDai wallet address >>> ",
-                  required_if=lambda: "uniswap_xdai" in required_exchanges,
-                  is_secure=True,
-                  is_connect_key=True),
-    "uniswap_xdai_wallet_seeds":
-        ConfigVar(key="uniswap_xdai_wallet_seeds",
-                  prompt="Enter your xDai wallet seeds >>> ",
-                  required_if=lambda: "uniswap_xdai" in required_exchanges,
-                  is_secure=True,
-                  is_connect_key=True),
-}}
+OTHER_DOMAINS_KEYS = {"uniswap_xdai": {}}

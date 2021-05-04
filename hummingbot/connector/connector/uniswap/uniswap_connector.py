@@ -59,14 +59,14 @@ class UniswapConnector(ConnectorBase):
     def __init__(self,
                  trading_pairs: List[str],
                  wallet_private_key: str,
-                 ethereum_rpc_url: str,
+                 evm_rpc_url: str,
                  trading_required: bool = True,
-                 prefix: str = "eth"
+                 domain: str = "ethereum"
                  ):
         """
         :param trading_pairs: a list of trading pairs
         :param wallet_private_key: a private key for eth wallet
-        :param ethereum_rpc_url: this is usually infura RPC URL
+        :param evm_rpc_url: this is usually infura RPC URL
         :param trading_required: Whether actual trading is needed.
         """
         super().__init__()
@@ -75,7 +75,7 @@ class UniswapConnector(ConnectorBase):
         for trading_pair in trading_pairs:
             self._tokens.update(set(trading_pair.split("-")))
         self._wallet_private_key = wallet_private_key
-        self._ethereum_rpc_url = ethereum_rpc_url
+        self._evm_rpc_url = evm_rpc_url
         self._trading_required = trading_required
         self._ev_loop = asyncio.get_event_loop()
         self._shared_client = None
@@ -90,10 +90,13 @@ class UniswapConnector(ConnectorBase):
         self._initiate_pool_status = None
         self._real_time_balance_update = False
         self._poll_notifier = None
-        self._prefix = prefix
+        self._domain = domain
 
     @property
-    def name(self):
+    def name(self) -> str:
+        # if self._domain != "ethereum":
+        #    return f"uniswap_${self._domain}"
+        # else:
         return "uniswap"
 
     @staticmethod
@@ -113,7 +116,7 @@ class UniswapConnector(ConnectorBase):
         """
         try:
             self.logger().info(f"Initializing Uniswap connector and paths for {self._trading_pairs} pairs.")
-            resp = await self._api_request("get", "{self._prefix}/uniswap/start",
+            resp = await self._api_request("get", f"{self._domain}/uniswap/start",
                                            {"pairs": json.dumps(self._trading_pairs)})
             status = bool(str(resp["success"]))
             if bool(str(resp["success"])):
@@ -149,7 +152,7 @@ class UniswapConnector(ConnectorBase):
         :param token_symbol: token to approve.
         """
         resp = await self._api_request("post",
-                                       "{self._prefix}/approve",
+                                       f"{self._domain}/approve",
                                        {"token": token_symbol,
                                         "connector": self.name})
         amount_approved = Decimal(str(resp["amount"]))
@@ -165,7 +168,7 @@ class UniswapConnector(ConnectorBase):
         :return: A dictionary of token and its allowance (how much Uniswap can spend).
         """
         ret_val = {}
-        resp = await self._api_request("post", "{self._prefix}/allowances",
+        resp = await self._api_request("post", f"{self._domain}/allowances",
                                        {"tokenList": "[" + (",".join(['"' + t + '"' for t in self._tokens])) + "]",
                                         "connector": self.name})
         for token, amount in resp["approvals"].items():
@@ -186,7 +189,7 @@ class UniswapConnector(ConnectorBase):
             base, quote = trading_pair.split("-")
             side = "buy" if is_buy else "sell"
             resp = await self._api_request("post",
-                                           "{self._prefix}/uniswap/price",
+                                           f"{self._domain}/uniswap/price",
                                            {"base": base,
                                             "quote": quote,
                                             "side": side.upper(),
@@ -299,7 +302,7 @@ class UniswapConnector(ConnectorBase):
                       "limitPrice": str(price),
                       }
         try:
-            order_result = await self._api_request("post", "{self._prefix}/uniswap/trade", api_params)
+            order_result = await self._api_request("post", f"{self._domain}/uniswap/trade", api_params)
             hash = order_result.get("txHash")
             gas_price = order_result.get("gasPrice")
             gas_limit = order_result.get("gasLimit")
@@ -377,7 +380,7 @@ class UniswapConnector(ConnectorBase):
             for tracked_order in tracked_orders:
                 order_id = await tracked_order.get_exchange_order_id()
                 tasks.append(self._api_request("post",
-                                               "{self._prefix}/poll",
+                                               f"{self._domain}/poll",
                                                {"txHash": order_id}))
             update_results = await safe_gather(*tasks, return_exceptions=True)
             for update_result in update_results:
@@ -530,7 +533,7 @@ class UniswapConnector(ConnectorBase):
             local_asset_names = set(self._account_balances.keys())
             remote_asset_names = set()
             resp_json = await self._api_request("post",
-                                                "{self._prefix}/balances",
+                                                f"{self._domain}/balances",
                                                 {"tokenList": "[" + (",".join(['"' + t + '"' for t in self._tokens])) + "]"})
 
             for token, bal in resp_json["balances"].items():

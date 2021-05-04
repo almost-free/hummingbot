@@ -1,9 +1,0 @@
-CENTRALIZED = False
-EXAMPLE_PAIR = "WXDAI-WETH"
-DEFAULT_FEES = [0., 0.]
-
-USE_EVM = 'evm'
-FEE_TYPE = "FlatFee"
-# FEE_TOKEN = "ETH"
-
-USE_ETH_GAS_LOOKUP = False

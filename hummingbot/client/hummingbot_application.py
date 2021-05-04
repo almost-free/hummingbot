@@ -255,12 +255,11 @@ class HummingbotApplication(*commands):
                     else:
                         evm_rpc_url = global_config_map.get("rpc_urls").value[conn_setting.domain_parameter]
 
-                    # evm_rpc_url = global_config_map.get(f"{conn_setting.use_evm}_rpc_url").value
                     # Todo: Hard coded this execption for now until we figure out how to handle all ethereum connectors.
-                    if connector_name in ["balancer", "uniswap", "perpetual_finance"]:
+                    if connector_name in ["balancer", "perpetual_finance"]:
                         private_key = get_eth_wallet_private_key()
                         init_params.update(wallet_private_key=private_key, ethereum_rpc_url=evm_rpc_url)
-                    elif connector_name.startswith("uniswap_"):
+                    elif connector_name.startswith("uniswap"):
                         private_key = get_eth_wallet_private_key()
                         init_params.update(wallet_private_key=private_key, evm_rpc_url=evm_rpc_url)
                     else:
