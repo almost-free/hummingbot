@@ -153,19 +153,6 @@ main_config_map = {
                   type_str="str",
                   required_if=lambda: False,
                   is_connect_key=True),
-    "ethereum_chain_name":
-        ConfigVar(key="ethereum_chain_name",
-                  prompt="What is your preferred ethereum chain name (MAIN_NET, KOVAN)? >>> ",
-                  type_str="str",
-                  required_if=lambda: False,
-                  validator=lambda s: None if s in {"MAIN_NET", "KOVAN"} else "Invalid chain name.",
-                  default="MAIN_NET"),
-    "ethereum_token_list_url":
-        ConfigVar(key="ethereum_token_list_url",
-                  prompt="Specify token list url of a list available on https://tokenlists.org/ >>> ",
-                  type_str="str",
-                  required_if=lambda: global_config_map["ethereum_wallet"].value is not None,
-                  default="https://defi.cmc.eth.link/"),
     "rpc_urls":
         ConfigVar(key="rpc_urls",
                   prompt="Specify EVM-compatible RPC node URL(s) for your client to connect to (default = None) >>> ",
@@ -178,7 +165,7 @@ main_config_map = {
                   required_if=lambda: global_config_map["ethereum_wallet"].value is not None),
     "token_list_urls":
         ConfigVar(key="token_list_urls",
-                  prompt="Specify EVM-compatible token list(s) url of a list available on https://tokenlists.org/ >>> ",
+                  prompt="Specify EVM-compatible token list url(s) of a list available on https://tokenlists.org/ >>> ",
                   type_str="json",
                   required_if=lambda: True),
     "chains":

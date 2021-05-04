@@ -30,7 +30,7 @@ global_config_map['gateway_api_host'].value = "localhost"
 global_config_map['gateway_api_port'].value = 5000
 global_config_map['ethgasstation_gas_enabled'].value = False
 global_config_map['manual_gas_price'].value = 50
-global_config_map.get("ethereum_chain_name").value = "kovan"
+global_config_map.get("chain_names").value["ethereum"] = "kovan"
 
 trading_pair = "WETH-DAI"
 base, quote = trading_pair.split("-")

@@ -95,8 +95,6 @@ probit_kr_secret_key: null
 
 # Ethereum wallet address: required for trading on a DEX
 ethereum_wallet: null
-ethereum_chain_name: MAIN_NET
-ethereum_token_list_url: https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link
 
 rpc_urls:
   ethereum: null
@@ -105,14 +103,14 @@ ws_urls:
   ethereum: null
 
 token_list_urls:
-  ethereum: null
+  ethereum: https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link
 
 # Chain ID's
 chains:
-  ethereum: null
+  ethereum: 1
 
 chain_names:
-  ethereum: null
+  ethereum: MAIN_NET
 
 
 # Kill switch

@@ -29,7 +29,7 @@ from hummingbot.client.config.global_config_map import global_config_map
 
 global_config_map['gateway_api_host'].value = "localhost"
 global_config_map['gateway_api_port'].value = 5000
-global_config_map.get("ethereum_chain_name").value = "mainnet"
+global_config_map.get("chain_names").value["ethereum"] = 'mainnet'
 
 trading_pair = "SNX-USDC"
 leverage = 3

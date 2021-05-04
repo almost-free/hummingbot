@@ -28,8 +28,8 @@ from hummingbot.client.config.global_config_map import global_config_map
 
 global_config_map['gateway_api_host'].value = "localhost"
 global_config_map['gateway_api_port'].value = 5000
-global_config_map['ethereum_token_list_url'].value = "https://defi.cmc.eth.link"
-global_config_map.get("ethereum_chain_name").value = "kovan"
+global_config_map['token_list_urls'].value['ethereum'] = "https://defi.cmc.eth.link"
+global_config_map.get('chain_names').value['ethereum'] = "kovan"
 
 trading_pair = "WETH-DAI"
 base, quote = trading_pair.split("-")

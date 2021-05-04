@@ -233,7 +233,7 @@ class Web3WalletBackend(PubSub):
         )
 
         # Create event watchers.
-        websocket_url: str = global_config_map["rpc_urls"].value["ethereum"]
+        websocket_url: str = global_config_map.get("ws_urls").value["ethereum"]
         self._new_blocks_watcher = WSNewBlocksWatcher(self._w3, websocket_url)
         self._account_balance_watcher = AccountBalanceWatcher(
             self._w3,

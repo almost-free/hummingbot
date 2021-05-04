@@ -233,7 +233,7 @@ class StatusCommand:
         # this section will need updating.
         if global_config_map.get("paper_trade_enabled").value:
             if "balancer" in required_exchanges and \
-                    str(global_config_map.get("ethereum_chain_name").value).lower() != "kovan":
+                    str(global_config_map.get("chain_names").value["ethereum"]).lower() != "kovan":
                 self._notify("Error: Paper trade mode is not available on balancer at the moment.")
                 return False
             if "binance_perpetual" in required_exchanges:

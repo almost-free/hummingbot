@@ -211,14 +211,13 @@ class HummingbotApplication(*commands):
         evm_rpc_url = rpc_urls["evm"]
         erc20_token_addresses = {t: l[0] for t, l in self.token_list.items() if t in token_trading_pairs}
 
-        # TODO:
-        chain_name: str = global_config_map.get("ethereum_chain_name").value
+        chain_name: str = global_config_map.get("chain_names").value['ethereum']
         chain = getattr(EthereumChain, chain_name)
         self.logger().warning('chain', chain)
 
         self.wallet: Web3Wallet = Web3Wallet(
             private_key=private_key,
-            backend_urls=[ethereum_rpc_url, evm_rpc_url],  # TODO: rpc_urls.values() ?
+            backend_urls=[ethereum_rpc_url, evm_rpc_url],  # TODO: [v for v in rpc_urls.values()] ?
             erc20_token_addresses=erc20_token_addresses,
             chain=chain,
         )
