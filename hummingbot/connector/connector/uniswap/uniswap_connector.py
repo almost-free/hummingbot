@@ -91,12 +91,12 @@ class UniswapConnector(ConnectorBase):
         self._real_time_balance_update = False
         self._poll_notifier = None
         self._domain = domain
+        self._api_prefix = "eth"
+        if domain != "ethereum":
+            self._api_prefix = "evm"
 
     @property
     def name(self) -> str:
-        # if self._domain != "ethereum":
-        #    return f"uniswap_${self._domain}"
-        # else:
         return "uniswap"
 
     @staticmethod
@@ -116,7 +116,7 @@ class UniswapConnector(ConnectorBase):
         """
         try:
             self.logger().info(f"Initializing Uniswap connector and paths for {self._trading_pairs} pairs.")
-            resp = await self._api_request("get", f"{self._domain}/uniswap/start",
+            resp = await self._api_request("get", f"{self._api_prefix}/uniswap/start",
                                            {"pairs": json.dumps(self._trading_pairs)})
             status = bool(str(resp["success"]))
             if bool(str(resp["success"])):
@@ -152,7 +152,7 @@ class UniswapConnector(ConnectorBase):
         :param token_symbol: token to approve.
         """
         resp = await self._api_request("post",
-                                       f"{self._domain}/approve",
+                                       f"{self._api_prefix}/approve",
                                        {"token": token_symbol,
                                         "connector": self.name})
         amount_approved = Decimal(str(resp["amount"]))
@@ -168,7 +168,7 @@ class UniswapConnector(ConnectorBase):
         :return: A dictionary of token and its allowance (how much Uniswap can spend).
         """
         ret_val = {}
-        resp = await self._api_request("post", f"{self._domain}/allowances",
+        resp = await self._api_request("post", f"{self._api_prefix}/allowances",
                                        {"tokenList": "[" + (",".join(['"' + t + '"' for t in self._tokens])) + "]",
                                         "connector": self.name})
         for token, amount in resp["approvals"].items():
@@ -189,7 +189,7 @@ class UniswapConnector(ConnectorBase):
             base, quote = trading_pair.split("-")
             side = "buy" if is_buy else "sell"
             resp = await self._api_request("post",
-                                           f"{self._domain}/uniswap/price",
+                                           f"{self._api_prefix}/uniswap/price",
                                            {"base": base,
                                             "quote": quote,
                                             "side": side.upper(),
@@ -302,7 +302,7 @@ class UniswapConnector(ConnectorBase):
                       "limitPrice": str(price),
                       }
         try:
-            order_result = await self._api_request("post", f"{self._domain}/uniswap/trade", api_params)
+            order_result = await self._api_request("post", f"{self._api_prefix}/uniswap/trade", api_params)
             hash = order_result.get("txHash")
             gas_price = order_result.get("gasPrice")
             gas_limit = order_result.get("gasLimit")
@@ -380,7 +380,7 @@ class UniswapConnector(ConnectorBase):
             for tracked_order in tracked_orders:
                 order_id = await tracked_order.get_exchange_order_id()
                 tasks.append(self._api_request("post",
-                                               f"{self._domain}/poll",
+                                               f"{self._api_prefix}/poll",
                                                {"txHash": order_id}))
             update_results = await safe_gather(*tasks, return_exceptions=True)
             for update_result in update_results:
@@ -533,7 +533,7 @@ class UniswapConnector(ConnectorBase):
             local_asset_names = set(self._account_balances.keys())
             remote_asset_names = set()
             resp_json = await self._api_request("post",
-                                                f"{self._domain}/balances",
+                                                f"{self._api_prefix}/balances",
                                                 {"tokenList": "[" + (",".join(['"' + t + '"' for t in self._tokens])) + "]"})
 
             for token, bal in resp_json["balances"].items():
