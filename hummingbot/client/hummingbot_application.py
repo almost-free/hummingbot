@@ -205,17 +205,20 @@ class HummingbotApplication(*commands):
 
         ethereum_wallet = global_config_map.get("ethereum_wallet").value
         private_key = Security._private_keys[ethereum_wallet]
-        ethereum_rpc_url = global_config_map.get("ethereum_rpc_url").value
-        evm_rpc_url = global_config_map.get("evm_rpc_url").value
+
+        rpc_urls = global_config_map.get("rpc_urls").value
+        ethereum_rpc_url = rpc_urls["ethereum"]
+        evm_rpc_url = rpc_urls["evm"]
         erc20_token_addresses = {t: l[0] for t, l in self.token_list.items() if t in token_trading_pairs}
 
+        # TODO:
         chain_name: str = global_config_map.get("ethereum_chain_name").value
         chain = getattr(EthereumChain, chain_name)
         self.logger().warning('chain', chain)
 
         self.wallet: Web3Wallet = Web3Wallet(
             private_key=private_key,
-            backend_urls=[ethereum_rpc_url, evm_rpc_url],
+            backend_urls=[ethereum_rpc_url, evm_rpc_url],  # TODO: rpc_urls.values() ?
             erc20_token_addresses=erc20_token_addresses,
             chain=chain,
         )
@@ -246,12 +249,18 @@ class HummingbotApplication(*commands):
                 init_params = conn_setting.conn_init_parameters(keys)
                 init_params.update(trading_pairs=trading_pairs, trading_required=self._trading_required)
                 if conn_setting.use_evm:
-                    evm_rpc_url = global_config_map.get(f"{conn_setting.use_evm}_rpc_url").value
+
+                    if conn_setting.domain_parameter is None:
+                        evm_rpc_url = global_config_map.get("rpc_urls").value["ethereum"]
+                    else:
+                        evm_rpc_url = global_config_map.get("rpc_urls").value[conn_setting.domain_parameter]
+
+                    # evm_rpc_url = global_config_map.get(f"{conn_setting.use_evm}_rpc_url").value
                     # Todo: Hard coded this execption for now until we figure out how to handle all ethereum connectors.
                     if connector_name in ["balancer", "uniswap", "perpetual_finance"]:
                         private_key = get_eth_wallet_private_key()
                         init_params.update(wallet_private_key=private_key, ethereum_rpc_url=evm_rpc_url)
-                    elif connector_name in ["evm_uniswap"]:
+                    elif connector_name.startswith("uniswap_"):
                         private_key = get_eth_wallet_private_key()
                         init_params.update(wallet_private_key=private_key, evm_rpc_url=evm_rpc_url)
                     else:

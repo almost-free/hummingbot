@@ -116,15 +116,18 @@ class BalanceCommand:
 
         eth_address = global_config_map["ethereum_wallet"].value
         if eth_address is not None:
-            if global_config_map["ethereum_rpc_url"].value is not None:
+            if "ethereum" in global_config_map["rpc_urls"].value:
                 eth_df = await self.ethereum_balances_df()
                 lines = ["    " + line for line in eth_df.to_string(index=False).split("\n")]
                 self._notify("\nethereum:")
                 self._notify("\n".join(lines))
 
+            # TODO: Iterate global_config_map["rpc_urls"] instead, or chains from CONNECTOR_SETTINGS
+            # Pass actual domain to evm_balances_df
+
             if "evm_rpc_url" in global_config_map:
                 evm_chain = global_config_map.get("evm_chain")
-                evm_df = await self.evm_balances_df()
+                evm_df = await self.evm_balances_df("evm")
                 lines = ["    " + line for line in evm_df.to_string(index=False).split("\n")]
                 self._notify(f"\nevm ({evm_chain.value}):")
                 self._notify("\n".join(lines))
@@ -184,14 +187,14 @@ class BalanceCommand:
         return df
 
     async def evm_balances_df(self,  # type: HummingbotApplication
-                              ):
+                              domain: str):
         rows = []
         if ethereum_required_trading_pairs():
-            bals = await UserBalances.eth_n_erc20_balances("evm")
+            bals = await UserBalances.eth_n_erc20_balances(domain)
             for token, bal in bals.items():
                 rows.append({"Asset": token, "Amount": round(bal, 4)})
         else:
-            evm_bal = UserBalances.evm_balance("evm")
+            evm_bal = UserBalances.evm_balance(domain)
             # fee_asset = ("evm_fee_asset" in global_config_map is not None else global_config_map['evm_fee_asset']) or 'FEE_TOKEN'
             rows.append({"Asset": "native gas token", "Amount": round(evm_bal, 4)})
         df = pd.DataFrame(data=rows, columns=["Asset", "Amount"])

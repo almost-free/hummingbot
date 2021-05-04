@@ -17,8 +17,9 @@ from hummingbot.client.config.config_helpers import (
     get_strategy_config_map
 )
 from hummingbot.client.config.security import Security
+from hummingbot.client.settings import CONNECTOR_SETTINGS, EVM_CONNECTORS
 from hummingbot.user.user_balances import UserBalances
-from hummingbot.client.settings import required_exchanges, ethereum_required, evm_required
+from hummingbot.client.settings import required_exchanges, ethereum_required
 from hummingbot.core.utils.async_utils import safe_ensure_future
 
 from typing import TYPE_CHECKING
@@ -101,14 +102,20 @@ class StatusCommand:
             connections = await UserBalances.instance().update_exchanges(exchanges=required_exchanges)
             invalid_conns.update({ex: err_msg for ex, err_msg in connections.items()
                                   if ex in required_exchanges and err_msg is not None})
-            if ethereum_required():
-                eth_err_msg = UserBalances.validate_evm()
-                if eth_err_msg is not None:
-                    invalid_conns["ethereum"] = eth_err_msg
-            if evm_required():
-                evm_err_msg = UserBalances.validate_evm('evm')
-                if evm_err_msg is not None:
-                    invalid_conns["evm"] = evm_err_msg
+
+            evm_domains = \
+                set([cs.domain_parameter for cs in CONNECTOR_SETTINGS.values() if cs.name in EVM_CONNECTORS and cs.is_sub_domain])
+
+            if ethereum_required() and "ethereum" not in evm_domains:
+                evm_domains.add("ethereum")
+
+            for domain in evm_domains:
+                if domain in invalid_conns:
+                    continue
+                else:
+                    err_msg = UserBalances.validate_evm(domain)
+                    if err_msg is not None:
+                        invalid_conns[domain] = err_msg
 
         return invalid_conns
 
@@ -170,10 +177,10 @@ class StatusCommand:
 
         if self.wallet is not None:
             # Only check node url when a wallet has been initialized
-            eth_node_valid = check_web3(global_config_map.get("ethereum_rpc_url").value)
+            eth_node_valid = check_web3(global_config_map.get("rpc_urls").value["ethereum"])
             if not eth_node_valid:
                 self._notify('  - Node check: Bad ethereum rpc url. '
-                             'Please re-configure by entering "config ethereum_rpc_url"')
+                             'Please re-configure by entering "config ethereum_rpc_url"')  # TODO: Fix
                 return False
             elif notify_success:
                 self._notify("  - Node check: Ethereum node running and current.")

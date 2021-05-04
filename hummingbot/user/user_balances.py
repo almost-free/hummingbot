@@ -104,22 +104,20 @@ class UserBalances:
             return results
 
     @staticmethod
-    def evm_balance(prefix = "ethereum") -> Decimal:
+    def evm_balance(domain = "ethereum") -> Decimal:
         ethereum_wallet = global_config_map.get("ethereum_wallet").value
-        rpc_url_key = f"{prefix}_rpc_url"
-        evm_rpc_url_pair = global_config_map.get(rpc_url_key)
-        if evm_rpc_url_pair is None:
+        rpc_url_map = global_config_map.get("rpc_urls").value
+        rpc_url = rpc_url_map[domain]
+        if rpc_url is None:
             return 0
-        evm_rpc_url = evm_rpc_url_pair.value
-        web3 = Web3(Web3.HTTPProvider(evm_rpc_url))
+        web3 = Web3(Web3.HTTPProvider(rpc_url))
         balance = web3.eth.getBalance(ethereum_wallet)
         balance = web3.fromWei(balance, "ether")
         return balance
 
     @staticmethod
-    async def eth_n_erc20_balances(prefix = "ethereum") -> Dict[str, Decimal]:
-        evm_rpc_url = global_config_map.get(f"{prefix}_rpc_url").value
-
+    async def eth_n_erc20_balances(domain = "ethereum") -> Dict[str, Decimal]:
+        evm_rpc_url = global_config_map.get("rpc_urls").value[domain].value
         # if prefix == "evm":
         #     connector = EvmUniswapConnector(ethereum_required_trading_pairs,
         #                                     get_eth_wallet_private_key(),
@@ -143,17 +141,26 @@ class UserBalances:
         return connector.get_all_balances()
 
     @staticmethod
-    def validate_evm(prefix = "ethereum") -> Optional[str]:
+    def validate_evm(domain = "ethereum") -> Optional[str]:
         if global_config_map.get("ethereum_wallet").value is None:
             return "Ethereum wallet is required."
-        if global_config_map.get(f"{prefix}_rpc_url").value is None:
-            return f"{prefix}_rpc_url is required."
-        if global_config_map.get(f"{prefix}_rpc_ws_url").value is None:
-            return f"{prefix}_rpc_ws_url is required."
+
+        rpc_url_map = global_config_map.get("rpc_urls").value
+        if rpc_url_map is None:
+            return "rpc_urls is required."
+        elif domain not in rpc_url_map:
+            return f"rpc_urls requires entry for domain ${domain}"
+
+        ws_url_map = global_config_map.get("ws_urls").value
+        if ws_url_map is None:
+            return "ws_urls is required."
+        elif domain not in rpc_url_map:
+            return f"ws_urls requires entry for domain ${domain}"
+
         if global_config_map.get("ethereum_wallet").value not in Security.private_keys():
             return "Ethereum private key file does not exist or is corrupted."
         try:
-            UserBalances.evm_balance(prefix)
+            UserBalances.evm_balance(domain)
         except Exception as e:
             return str(e)
         return None
