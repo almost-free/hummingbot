@@ -247,6 +247,7 @@ class HummingbotApplication(*commands):
                         if key in conn_setting.config_keys}
                 init_params = conn_setting.conn_init_parameters(keys)
                 init_params.update(trading_pairs=trading_pairs, trading_required=self._trading_required)
+
                 if conn_setting.use_evm:
 
                     if conn_setting.domain_parameter is None:

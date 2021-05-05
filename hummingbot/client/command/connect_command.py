@@ -12,21 +12,21 @@ if TYPE_CHECKING:
     from hummingbot.client.hummingbot_application import HummingbotApplication
 
 OPTIONS = {cs.name for cs in settings.CONNECTOR_SETTINGS.values()
-           if not cs.use_evm}.union({"ethereum", "evm", "celo"})
+           if not cs.use_evm}.union({"ethereum", "celo"})
 
 
 class ConnectCommand:
     def connect(self,  # type: HummingbotApplication
                 option: str):
 
-        # TODO: Use enum from settings
+        evm_domains = global_config_map.get("rpc_urls").value.keys()
 
         if option is None:
             safe_ensure_future(self.show_connections())
-        elif option == "ethereum" or option == "evm" or option == "xdai":
-            safe_ensure_future(self.connect_evm(option))
         elif option == "celo":
             safe_ensure_future(self.connect_celo())
+        elif option in evm_domains:
+            safe_ensure_future(self.connect_evm(option))
         else:
             safe_ensure_future(self.connect_exchange(option))
 
@@ -89,11 +89,12 @@ class ConnectCommand:
         data = []
         failed_msgs = {}
         err_msgs = await UserBalances.instance().update_exchanges(reconnect=True)
+
         for option in sorted(OPTIONS):
             keys_added = "No"
             keys_confirmed = 'No'
             status = get_connector_status(option)
-            if option == "ethereum" or option == "evm":
+            if option == "ethereum":
                 eth_address = global_config_map["ethereum_wallet"].value
                 if eth_address is not None and eth_address in Security.private_keys():
                     keys_added = "Yes"
