@@ -54,9 +54,11 @@ global_configs_to_display = ["0x_active_cancels",
                              "rate_oracle_source",
                              "global_token",
                              "global_token_symbol"]
+keys_with_domains = ["wallets", "rpc_urls", "ws_urls", "token_list_urls", "chains", "chain_names"]
 
 
 class ConfigCommand:
+
     def config(self,  # type: HummingbotApplication
                key: str = None,
                value: str = None):
@@ -144,6 +146,8 @@ class ConfigCommand:
                 await self.asset_ratio_maintenance_prompt(config_map, input_value)
             elif config_var.key == "inventory_price":
                 await self.inventory_price_prompt(config_map, input_value)
+            elif config_var.key in keys_with_domains:
+                await self.key_with_domain_prompt(config_map, key, input_value)
             else:
                 await self.prompt_a_config(config_var, input_value=input_value, assign_default=False)
             if self.app.to_stop_config:
@@ -185,6 +189,14 @@ class ConfigCommand:
         if missing_required_configs(config_map):
             return missings + (await self._prompt_missing_configs(config_map))
         return missings
+
+    async def key_with_domain_prompt(self,  # type: HummingbotApplication
+                                     config_map,
+                                     key,
+                                     input_value):
+        domain_to_val = config_map[key]
+        domain = await self.app.prompt(prompt=f"Enter the EVM domain to assign the {key} value >>> ")
+        domain_to_val[domain] = input_value
 
     async def asset_ratio_maintenance_prompt(self,  # type: HummingbotApplication
                                              config_map,

@@ -156,11 +156,12 @@ def get_strategy_template_path(strategy: str) -> str:
     return join(TEMPLATE_PATH, f"{CONF_PREFIX}{strategy}{CONF_POSTFIX}_TEMPLATE.yml")
 
 
-def get_eth_wallet_private_key() -> Optional[str]:
-    ethereum_wallet = global_config_map.get("ethereum_wallet").value
-    if ethereum_wallet is None or ethereum_wallet == "":
+def get_eth_wallet_private_key(domain: str) -> Optional[str]:
+    wallets = global_config_map.get("wallets").value
+    if wallets is None or domain not in wallets or wallets[domain] == "":
         return None
-    private_key = Security._private_keys[ethereum_wallet]
+    wallet = wallets[domain]
+    private_key = Security._private_keys[wallet]
     account = Account.privateKeyToAccount(private_key)
     return account.privateKey.hex()
 

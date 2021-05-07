@@ -12,21 +12,25 @@ if TYPE_CHECKING:
     from hummingbot.client.hummingbot_application import HummingbotApplication
 
 OPTIONS = {cs.name for cs in settings.CONNECTOR_SETTINGS.values()
-           if not cs.use_evm}.union({"ethereum", "celo"})
+           if not cs.use_evm}.union({"evm", "celo"})
 
 
 class ConnectCommand:
     def connect(self,  # type: HummingbotApplication
                 option: str):
 
-        evm_domains = global_config_map.get("rpc_urls").value.keys()
-
         if option is None:
             safe_ensure_future(self.show_connections())
         elif option == "celo":
             safe_ensure_future(self.connect_celo())
-        elif option in evm_domains:
-            safe_ensure_future(self.connect_evm(option))
+        elif option == "evm":
+            evm_domains = global_config_map.get("rpc_urls").value.keys()
+            prompt = f"Which EVM to connect to? ({', '.join(evm_domains)})? >>> "
+            answer = await self.app.prompt(prompt=prompt)
+            if answer not in evm_domains:
+                self._notify("\nError: Unknown EVM specified: " + answer)
+            else:
+                safe_ensure_future(self.connect_evm(answer))
         else:
             safe_ensure_future(self.connect_exchange(option))
 
@@ -89,14 +93,15 @@ class ConnectCommand:
         data = []
         failed_msgs = {}
         err_msgs = await UserBalances.instance().update_exchanges(reconnect=True)
+        evm_domains = global_config_map.get("rpc_urls").value.keys()
 
         for option in sorted(OPTIONS):
             keys_added = "No"
             keys_confirmed = 'No'
             status = get_connector_status(option)
-            if option == "ethereum":
-                eth_address = global_config_map["ethereum_wallet"].value
-                if eth_address is not None and eth_address in Security.private_keys():
+            if option in evm_domains:
+                evm_address = global_config_map.get("wallets").value[option]
+                if evm_address is not None and evm_address in Security.private_keys():
                     keys_added = "Yes"
                     err_msg = UserBalances.validate_evm(option)
                     if err_msg is not None:
@@ -128,7 +133,9 @@ class ConnectCommand:
                           domain = "ethereum"):
         self.placeholder_mode = True
         self.app.hide_input = True
-        ether_wallet = global_config_map["ethereum_wallet"].value
+
+        wallets = global_config_map.get("wallets").value
+        wallet = wallets[domain]
 
         rpc_url_map = global_config_map.get("rpc_urls").value
         ws_url_map = global_config_map.get("ws_urls").value
@@ -139,9 +146,9 @@ class ConnectCommand:
         to_connect = True
         reconfigure_answer = "no"
 
-        if ether_wallet is not None:
-            answer = await self.app.prompt(prompt=f"Would you like to replace your existing Ethereum wallet "
-                                                  f"{ether_wallet} (Yes/No)? >>> ")
+        if wallet is not None and wallet != "":
+            answer = await self.app.prompt(prompt=f"Would you like to replace your existing EVM wallet "
+                                                  f"{wallet} (Yes/No)? >>> ")
             if self.app.to_stop_config:
                 self.app.to_stop_config = False
                 return
@@ -150,34 +157,30 @@ class ConnectCommand:
                 reconfigure_answer = "yes"
                 if rpc_url_map is not None and domain in rpc_url_map:
                     reconfigure_answer = await self.app.prompt(prompt=f"Would you like to reconfigure your {domain} connection? (yes/No)? >>> ")
+
         if to_connect:
             private_key = await self.app.prompt(prompt="Enter your wallet private key >>> ", is_password=True)
             public_address = Security.add_private_key(private_key)
-            global_config_map["ethereum_wallet"].value = public_address
+            wallets[domain] = public_address
         else:
-            public_address = ether_wallet
+            public_address = wallet
 
         if reconfigure_answer.lower() in ("yes", "y"):
 
-            if domain not in rpc_url_map:
-                answer = await self.app.prompt(prompt=f"Please enter an RPC URL for ${domain} >>> ")
-                rpc_url_map[domain] = answer
+            answer = await self.app.prompt(prompt=f"Please enter an RPC URL for {domain} >>> ")
+            rpc_url_map[domain] = answer
 
-            if domain != "ethereum" and domain not in ws_url_map:
-                answer = await self.app.prompt(prompt=f"Please enter a WebSocket URL for ${domain} >>> ")
-                ws_url_map[domain] = answer
+            answer = await self.app.prompt(prompt=f"Please enter a WebSocket URL for {domain} >>> ")
+            ws_url_map[domain] = answer
 
-            if domain != "ethereum" and domain not in chain_map:
-                answer = await self.app.prompt(prompt=f"Please enter a ChainID for ${domain} >>> ")
-                chain_map[domain] = answer
+            answer = await self.app.prompt(prompt=f"Please enter a ChainID for {domain} >>> ")
+            chain_map[domain] = answer
 
-            if domain not in chain_name_map:
-                answer = await self.app.prompt(prompt=f"Please enter a Chain Name for ${domain} >>> ")
-                chain_name_map[domain] = answer
+            answer = await self.app.prompt(prompt=f"Please enter a Chain Name for {domain} >>> ")
+            chain_name_map[domain] = answer
 
-            if domain != "ethereum" and domain not in token_list_url_map:
-                answer = await self.app.prompt(prompt=f"Please enter a token list URL for ${domain} >>> ")
-                token_list_url_map[domain] = answer
+            answer = await self.app.prompt(prompt=f"Please enter a token list URL for {domain} >>> ")
+            token_list_url_map[domain] = answer
 
             if self.app.to_stop_config:
                 self.app.to_stop_config = False

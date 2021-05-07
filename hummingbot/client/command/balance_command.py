@@ -9,7 +9,7 @@ from hummingbot.client.config.config_helpers import (
     save_to_yml
 )
 from hummingbot.client.config.config_validators import validate_decimal, validate_exchange
-from hummingbot.client.settings import EVM_CONNECTORS, ethereum_required
+from hummingbot.client.settings import ethereum_required
 from hummingbot.market.celo.celo_cli import CeloCLI
 from hummingbot.client.performance import smart_round
 from hummingbot.core.rate_oracle.rate_oracle import RateOracle
@@ -115,25 +115,26 @@ class BalanceCommand:
             except Exception as e:
                 self._notify(f"\ncelo CLI Error: {str(e)}")
 
-        eth_address = global_config_map["ethereum_wallet"].value
-        if eth_address is not None:
-            if ethereum_required():
-                eth_df = await self.ethereum_balances_df()
-                lines = ["    " + line for line in eth_df.to_string(index=False).split("\n")]
-                self._notify("\nethereum:")
-                self._notify("\n".join(lines))
-
-            domains = [c.domain_parameter for c in EVM_CONNECTORS if c.use_evm != "ethereum" and c.is_sub_domain]
-            for domain in domains:
-                evm_chain = global_config_map.get("chains").value[domain]
-                # TODO:
-                if domain == "xdai":
-                    evm_df = await self.xdai_balances_df()
-                else:
-                    evm_df = await self.evm_balances_df(domain)
-                lines = ["    " + line for line in evm_df.to_string(index=False).split("\n")]
-                self._notify(f"\n${domain} ({evm_chain}):")
-                self._notify("\n".join(lines))
+        wallets = global_config_map.get("wallets").value
+        if wallets is not None:
+            for domain in wallets.keys():
+                address = wallets[domain]
+                if address is not None:
+                    if domain == "ethereum" and ethereum_required():
+                        eth_df = await self.ethereum_balances_df()
+                        lines = ["    " + line for line in eth_df.to_string(index=False).split("\n")]
+                        self._notify("\nethereum:")
+                        self._notify("\n".join(lines))
+                    else:
+                        evm_chain = global_config_map.get("chains").value[domain]
+                        # TODO:
+                        if domain == "xdai":
+                            evm_df = await self.xdai_balances_df()
+                        else:
+                            evm_df = await self.evm_balances_df(domain)
+                        lines = ["    " + line for line in evm_df.to_string(index=False).split("\n")]
+                        self._notify(f"\n${domain} ({evm_chain}):")
+                        self._notify("\n".join(lines))
 
     async def exchange_balances_extra_df(self,  # type: HummingbotApplication
                                          ex_balances: Dict[str, Decimal],

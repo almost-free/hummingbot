@@ -105,13 +105,15 @@ class UserBalances:
 
     @staticmethod
     def evm_balance(domain = "ethereum") -> Decimal:
-        ethereum_wallet = global_config_map.get("ethereum_wallet").value
+        wallets = global_config_map.get("wallets").value
+        if domain not in wallets or wallets[domain] is None:
+            return Decimal(0)
         rpc_url_map = global_config_map.get("rpc_urls").value
         rpc_url = rpc_url_map[domain]
         if rpc_url is None:
-            return 0
+            return Decimal(0)
         web3 = Web3(Web3.HTTPProvider(rpc_url))
-        balance = web3.eth.getBalance(ethereum_wallet)
+        balance = web3.eth.getBalance(wallets[domain])
         balance = web3.fromWei(balance, "ether")
         return balance
 
@@ -120,12 +122,12 @@ class UserBalances:
         evm_rpc_url = global_config_map.get("rpc_urls").value[domain]
         # if prefix == "evm":
         #     connector = EvmUniswapConnector(ethereum_required_trading_pairs,
-        #                                     get_eth_wallet_private_key(),
+        #                                     get_eth_wallet_private_key(domain),
         #                                     evm_rpc_url.value)
         # else:
         # Todo: Use generic ERC20 balance update
         connector = BalancerConnector(ethereum_required_trading_pairs(),
-                                      get_eth_wallet_private_key(),
+                                      get_eth_wallet_private_key(domain),
                                       evm_rpc_url,
                                       True)
         await connector._update_balances()
@@ -134,7 +136,7 @@ class UserBalances:
     @staticmethod
     async def xdai_balances() -> Dict[str, Decimal]:
         connector = PerpetualFinanceDerivative("",
-                                               get_eth_wallet_private_key(),
+                                               get_eth_wallet_private_key("xdai"),
                                                "",
                                                True)
         await connector._update_balances()
@@ -142,23 +144,27 @@ class UserBalances:
 
     @staticmethod
     def validate_evm(domain = "ethereum") -> Optional[str]:
-        if global_config_map.get("ethereum_wallet").value is None:
-            return "Ethereum wallet is required."
+
+        wallets = global_config_map.get("wallets").value
+        if wallets is None:
+            return "wallets dict required."
+        elif domain not in wallets:
+            return f"wallet for domain {domain} required."
 
         rpc_url_map = global_config_map.get("rpc_urls").value
         if rpc_url_map is None:
             return "rpc_urls is required."
         elif domain not in rpc_url_map:
-            return f"rpc_urls requires entry for domain ${domain}"
+            return f"rpc_urls requires entry for domain {domain}"
 
         ws_url_map = global_config_map.get("ws_urls").value
         if ws_url_map is None:
             return "ws_urls is required."
         elif domain not in rpc_url_map:
-            return f"ws_urls requires entry for domain ${domain}"
+            return f"ws_urls requires entry for domain {domain}"
 
-        if global_config_map.get("ethereum_wallet").value not in Security.private_keys():
-            return "Ethereum private key file does not exist or is corrupted."
+        if wallets[domain] not in Security.private_keys():
+            return f"{domain} evm private key file does not exist or is corrupted."
         try:
             UserBalances.evm_balance(domain)
         except Exception as e:

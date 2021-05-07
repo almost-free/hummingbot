@@ -92,7 +92,7 @@ async def quick_start(args):
         global_config_map.get("kill_switch_enabled").value = False
 
     if wallet and password:
-        global_config_map.get("ethereum_wallet").value = wallet
+        global_config_map.get("wallets").value["ethereum"] = wallet
 
     if hb.strategy_name and hb.strategy_file_name:
         if not all_configs_complete(hb.strategy_name):

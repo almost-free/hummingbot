@@ -203,7 +203,8 @@ class HummingbotApplication(*commands):
         # if not self.token_list:
         #     self.token_list = get_erc20_token_addresses()
 
-        ethereum_wallet = global_config_map.get("ethereum_wallet").value
+        # Update for supporting EVMs now requires global_config_map.get('wallets').value[domain] instead of below
+        ethereum_wallet = global_config_map.get("wallets").value["ethereum"]
         private_key = Security._private_keys[ethereum_wallet]
 
         rpc_urls = global_config_map.get("rpc_urls").value
@@ -250,17 +251,19 @@ class HummingbotApplication(*commands):
 
                 if conn_setting.use_evm:
 
+                    domain = "ethereum"
                     if conn_setting.domain_parameter is None:
-                        evm_rpc_url = global_config_map.get("rpc_urls").value["ethereum"]
+                        evm_rpc_url = global_config_map.get("rpc_urls").value[domain]
                     else:
-                        evm_rpc_url = global_config_map.get("rpc_urls").value[conn_setting.domain_parameter]
+                        domain = conn_setting.domain_parameter
+                        evm_rpc_url = global_config_map.get("rpc_urls").value[domain]
 
                     # Todo: Hard coded this execption for now until we figure out how to handle all ethereum connectors.
                     if connector_name in ["balancer", "perpetual_finance"]:
-                        private_key = get_eth_wallet_private_key()
+                        private_key = get_eth_wallet_private_key(domain)
                         init_params.update(wallet_private_key=private_key, ethereum_rpc_url=evm_rpc_url)
                     elif connector_name.startswith("uniswap"):
-                        private_key = get_eth_wallet_private_key()
+                        private_key = get_eth_wallet_private_key(domain)
                         init_params.update(wallet_private_key=private_key, evm_rpc_url=evm_rpc_url)
                     else:
                         assert self.wallet is not None

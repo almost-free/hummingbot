@@ -177,10 +177,10 @@ class StatusCommand:
 
         if self.wallet is not None:
             # Only check node url when a wallet has been initialized
-            eth_node_valid = check_web3(global_config_map.get("rpc_urls").value["ethereum"])
-            if not eth_node_valid:
-                self._notify('  - Node check: Bad ethereum rpc url. '
-                             'Please re-configure by entering "config ethereum_rpc_url"')  # TODO: Fix
+            evm_node_valid = check_web3(global_config_map.get("rpc_urls").value["ethereum"])
+            if not evm_node_valid:
+                self._notify('  - Node check: Bad evm rpc url. '
+                             'Please re-configure by entering "config rpc_urls"')
                 return False
             elif notify_success:
                 self._notify("  - Node check: Ethereum node running and current.")

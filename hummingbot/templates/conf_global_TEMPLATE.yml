@@ -94,7 +94,8 @@ probit_kr_api_key: null
 probit_kr_secret_key: null
 
 # Ethereum wallet address: required for trading on a DEX
-ethereum_wallet: null
+wallets:
+  ethereum: null
 
 rpc_urls:
   ethereum: null

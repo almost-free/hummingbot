@@ -147,22 +147,21 @@ main_config_map = {
                   type_str="int",
                   validator=lambda v: validate_int(v, min_value=1, inclusive=True),
                   default=4),
-    "ethereum_wallet":
-        ConfigVar(key="ethereum_wallet",
-                  prompt="Enter your wallet private key >>> ",
-                  type_str="str",
-                  required_if=lambda: False,
-                  is_connect_key=True),
+    "wallets":
+        ConfigVar(key="wallets",
+                  prompt="Enter EVM domains and wallet private keys >>> ",
+                  type_str="json",
+                  required_if=lambda: False),  # , is_connect_key=True),
     "rpc_urls":
         ConfigVar(key="rpc_urls",
                   prompt="Specify EVM-compatible RPC node URL(s) for your client to connect to (default = None) >>> ",
                   type_str="json",
-                  required_if=lambda: global_config_map["ethereum_wallet"].value is not None),
+                  required_if=lambda: False),
     "ws_urls":
         ConfigVar(key="ws_urls",
                   prompt="Specify WebSocket Addresses of your EVM-compatible Nodes >>> ",
                   type_str="json",
-                  required_if=lambda: global_config_map["ethereum_wallet"].value is not None),
+                  required_if=lambda: False),
     "token_list_urls":
         ConfigVar(key="token_list_urls",
                   prompt="Specify EVM-compatible token list url(s) of a list available on https://tokenlists.org/ >>> ",
@@ -172,12 +171,12 @@ main_config_map = {
         ConfigVar(key="chains",
                   prompt="What are your EVM-compatible chain IDs (e.g. 56 = BSC, 100 = xDai)? >>> ",
                   type_str="json",
-                  required_if=lambda: global_config_map["ethereum_wallet"].value is not None),
+                  required_if=lambda: False),
     "chain_names":
         ConfigVar(key="chain_names",
                   prompt="What are your preferred EVM-compatible chain names (e.g. MAIN_NET)? >>> ",
                   type_str="json",
-                  required_if=lambda: global_config_map["ethereum_wallet"].value is not None),
+                  required_if=lambda: False),
     # Whether or not to invoke cancel_all on exit if marketing making on a open order book DEX (e.g. Radar Relay)
     "on_chain_cancel_on_exit":
         ConfigVar(key="on_chain_cancel_on_exit",
