@@ -16,6 +16,7 @@ OPTIONS = {cs.name for cs in settings.CONNECTOR_SETTINGS.values()
 
 
 class ConnectCommand:
+
     def connect(self,  # type: HummingbotApplication
                 option: str):
 
@@ -24,13 +25,7 @@ class ConnectCommand:
         elif option == "celo":
             safe_ensure_future(self.connect_celo())
         elif option == "evm":
-            evm_domains = global_config_map.get("rpc_urls").value.keys()
-            prompt = f"Which EVM to connect to? ({', '.join(evm_domains)})? >>> "
-            answer = await self.app.prompt(prompt=prompt)
-            if answer not in evm_domains:
-                self._notify("\nError: Unknown EVM specified: " + answer)
-            else:
-                safe_ensure_future(self.connect_evm(answer))
+            safe_ensure_future(self.connect_evm())
         else:
             safe_ensure_future(self.connect_exchange(option))
 
@@ -100,14 +95,16 @@ class ConnectCommand:
             keys_confirmed = 'No'
             status = get_connector_status(option)
             if option in evm_domains:
-                evm_address = global_config_map.get("wallets").value[option]
-                if evm_address is not None and evm_address in Security.private_keys():
-                    keys_added = "Yes"
-                    err_msg = UserBalances.validate_evm(option)
-                    if err_msg is not None:
-                        failed_msgs[option] = err_msg
-                    else:
-                        keys_confirmed = 'Yes'
+                wallets = global_config_map.get("wallets").value
+                if option in wallets:
+                    evm_address = wallets[option]
+                    if evm_address != "" and evm_address in Security.private_keys():
+                        keys_added = "Yes"
+                        err_msg = UserBalances.validate_evm(option)
+                        if err_msg is not None:
+                            failed_msgs[option] = err_msg
+                        else:
+                            keys_confirmed = 'Yes'
             elif option == "celo":
                 celo_address = global_config_map["celo_address"].value
                 if celo_address is not None and Security.encrypted_file_exists("celo_password"):
@@ -130,12 +127,23 @@ class ConnectCommand:
         return pd.DataFrame(data=data, columns=columns), failed_msgs
 
     async def connect_evm(self,  # type: HummingbotApplication
-                          domain = "ethereum"):
+                          ):
+
+        evm_domains = global_config_map.get("rpc_urls").value.keys()
+        prompt = f"Which EVM to connect to? ({', '.join(evm_domains)})? >>> "
+        domain = await self.app.prompt(prompt=prompt)
+
+        if domain not in evm_domains:
+            self._notify(f"\nError: Unknown EVM specified: {domain}")
+            return
+
         self.placeholder_mode = True
         self.app.hide_input = True
 
         wallets = global_config_map.get("wallets").value
-        wallet = wallets[domain]
+        wallet = None
+        if domain in wallets:
+            wallet = wallets[domain]
 
         rpc_url_map = global_config_map.get("rpc_urls").value
         ws_url_map = global_config_map.get("ws_urls").value
