@@ -93,10 +93,15 @@ class HistoryCommand:
         elif "perpetual_finance" == market:
             return await UserBalances.xdai_balances()
         else:
-            gateway_eth_connectors = [cs.name for cs in CONNECTOR_SETTINGS.values() if cs.use_evm and
-                                      cs.type == ConnectorType.Connector]
-            if market in gateway_eth_connectors:
-                return await UserBalances.instance().eth_n_erc20_balances()
+            evm_connectors = [cs for cs in CONNECTOR_SETTINGS.values() if cs.use_evm and cs.type == ConnectorType.Connector]
+            evm_conn_names = [cs.name for cs in evm_connectors]
+            conns_sub_domain = {cs.name: cs for cs in evm_connectors if cs.is_sub_domain}
+
+            if market in evm_conn_names:
+                domain = "ethereum"
+                if market in conns_sub_domain.keys():
+                    domain = conns_sub_domain[market].domain_parameter
+                return await UserBalances.instance().eth_n_erc20_balances(domain)
             else:
                 await UserBalances.instance().update_exchange_balance(market)
                 return UserBalances.instance().all_balances(market)

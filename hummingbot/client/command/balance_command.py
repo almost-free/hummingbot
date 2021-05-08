@@ -193,6 +193,7 @@ class BalanceCommand:
                 rows.append({"Asset": token, "Amount": round(bal, 4)})
         else:
             evm_bal = UserBalances.evm_balance(domain)
+            # gas_token = global_config_map.get("gas_tokens")[domain]
             # fee_asset = ("evm_fee_asset" in global_config_map is not None else global_config_map['evm_fee_asset']) or 'FEE_TOKEN'
             rows.append({"Asset": "native gas token", "Amount": round(evm_bal, 4)})
         df = pd.DataFrame(data=rows, columns=["Asset", "Amount"])

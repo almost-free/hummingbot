@@ -70,7 +70,7 @@ class HummingbotApplication(*commands):
         )
 
         self.markets: Dict[str, ExchangeBase] = {}
-        self.wallets = {}  # map domain to wallet, ex. "ethereum": Web3Wallet
+        self.wallets: Dict[str, Web3Wallet] = {}  # map domain to wallet, ex. "ethereum": Web3Wallet
         # self.evm_wallet: Optional[Web3Wallet] = None
         # strategy file name and name get assigned value after import or create command
         self._strategy_file_name: str = None
