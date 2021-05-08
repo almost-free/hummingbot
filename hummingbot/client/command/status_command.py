@@ -175,28 +175,40 @@ class StatusCommand:
         if invalid_conns or missing_configs:
             return False
 
-        if self.wallet is not None:
+        for domain in self.wallets.keys():
+
             # Only check node url when a wallet has been initialized
-            evm_node_valid = check_web3(global_config_map.get("rpc_urls").value["ethereum"])
+            evm_node_valid = check_web3(global_config_map.get("rpc_urls").value[domain])
             if not evm_node_valid:
                 self._notify('  - Node check: Bad evm rpc url. '
                              'Please re-configure by entering "config rpc_urls"')
                 return False
             elif notify_success:
-                self._notify("  - Node check: Ethereum node running and current.")
+                self._notify(f"  - Node check: EVM ({domain}) node running and current.")
 
-            if self.wallet.network_status is NetworkStatus.CONNECTED:
+            if self.wallets[domain].network_status is NetworkStatus.CONNECTED:
                 if self._trading_required:
-                    has_minimum_eth = self.wallet.get_balance("ETH") > 0.01
-                    if not has_minimum_eth:
-                        self._notify("  - ETH wallet check: Not enough ETH in wallet. "
-                                     "A small amount of Ether is required for sending transactions on "
+                    gas_tokens = global_config_map["gas_tokens"]
+                    min_requirements = global_config_map["gas_token_minimums"]
+                    if domain not in gas_tokens:
+                        self._notify(f" - EVM ({domain}) wallet check: No gas_token defined in global_config_map for {domain}")
+                        return False
+                    elif domain not in min_requirements:
+                        self._notify(f" - EVM ({domain}) wallet check: No gas_token_mins defined in global_config_map for {domain}")
+                        return False
+
+                    gas_token = gas_tokens[domain]
+                    min_required = min_requirements[domain]
+                    has_minimum_gas = self.wallet.get_balance(gas_token) > min_required
+                    if not has_minimum_gas:
+                        self._notify(f"  - EVM ({domain}) wallet check: Not enough {gas_token} in wallet. "
+                                     f"A small amount of {gas_token} is required for sending transactions on "
                                      "Decentralized Exchanges")
                         return False
                     elif notify_success:
-                        self._notify("  - ETH wallet check: Minimum ETH requirement satisfied")
+                        self._notify(f"  - EVM {(domain)} wallet check: Minimum {gas_token} requirement satisfied")
             else:
-                self._notify("  - ETH wallet check: ETH wallet is not connected.")
+                self._notify(f"  - EVM ({domain}) wallet check: wallet is not connected.")
 
         loading_markets: List[ConnectorBase] = []
         for market in self.markets.values():

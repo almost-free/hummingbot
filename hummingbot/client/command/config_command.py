@@ -54,7 +54,8 @@ global_configs_to_display = ["0x_active_cancels",
                              "rate_oracle_source",
                              "global_token",
                              "global_token_symbol"]
-keys_with_domains = ["wallets", "rpc_urls", "ws_urls", "token_list_urls", "chains", "chain_names"]
+keys_with_domains = ["wallets", "rpc_urls", "ws_urls", "token_list_urls",
+                     "chains", "chain_names", "gas_tokens", "gas_token_minimums"]
 
 
 class ConfigCommand:

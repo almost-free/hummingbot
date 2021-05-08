@@ -167,8 +167,8 @@ def get_eth_wallet_private_key(domain: str) -> Optional[str]:
 
 
 @lru_cache(None)
-def get_erc20_token_addresses() -> Dict[str, List]:
-    token_list_url = global_config_map.get("token_list_urls").value["ethereum"]
+def get_erc20_token_addresses(domain: str) -> Dict[str, List]:
+    token_list_url = global_config_map.get("token_list_urls").value[domain]
     address_file_path = TOKEN_ADDRESSES_FILE_PATH
     token_list = {}
 

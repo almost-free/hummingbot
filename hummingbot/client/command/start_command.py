@@ -118,8 +118,8 @@ class StartCommand:
             config_path: str = self.strategy_file_name
             self.start_time = time.time() * 1e3  # Time in milliseconds
             self.clock = Clock(ClockMode.REALTIME)
-            if self.wallet is not None:
-                self.clock.add_iterator(self.wallet)
+            for domain, wallet in self.wallets.items():
+                self.clock.add_iterator(wallet)
             for market in self.markets.values():
                 if market is not None:
                     self.clock.add_iterator(market)

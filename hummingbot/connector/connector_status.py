@@ -46,7 +46,10 @@ def get_connector_status(connector_name: str) -> str:
     YELLOW means the connector is either new or has one or more issues.
     GREEN means a connector is working properly.
     """
-    if connector_name not in connector_status.keys():
+    if connector_name.startswith("uniswap_") and "uniswap" in connector_status \
+            and connector_status["uniswap"] == "green":
+        status = "yellow"
+    elif connector_name not in connector_status.keys():
         status = "UNKNOWN"
     else:
         return connector_status[connector_name].upper()

@@ -145,24 +145,21 @@ class UserBalances:
     @staticmethod
     def validate_evm(domain = "ethereum") -> Optional[str]:
 
+        def check_parameter(name):
+            param = global_config_map.get(name).value
+            if param is None:
+                return f"{name} required."
+            elif domain not in param:
+                return f"{name} requires entry for domain {domain}"
+            return None
+
+        evm_parameters = ["wallets", "rpc_urls", "ws_urls", "gas_tokens", "gas_token_minimums"]
+        for p in evm_parameters:
+            error = check_parameter(p)
+            if error is not None:
+                return error
+
         wallets = global_config_map.get("wallets").value
-        if wallets is None:
-            return "wallets dict required."
-        elif domain not in wallets:
-            return f"wallet for domain {domain} required."
-
-        rpc_url_map = global_config_map.get("rpc_urls").value
-        if rpc_url_map is None:
-            return "rpc_urls is required."
-        elif domain not in rpc_url_map:
-            return f"rpc_urls requires entry for domain {domain}"
-
-        ws_url_map = global_config_map.get("ws_urls").value
-        if ws_url_map is None:
-            return "ws_urls is required."
-        elif domain not in rpc_url_map:
-            return f"ws_urls requires entry for domain {domain}"
-
         if wallets[domain] not in Security.private_keys():
             return f"{domain} evm private key file does not exist or is corrupted."
         try:

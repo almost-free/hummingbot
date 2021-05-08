@@ -70,7 +70,7 @@ class HummingbotApplication(*commands):
         )
 
         self.markets: Dict[str, ExchangeBase] = {}
-        self.wallet: Optional[Web3Wallet] = None
+        self.wallets = {}  # map domain to wallet, ex. "ethereum": Web3Wallet
         # self.evm_wallet: Optional[Web3Wallet] = None
         # strategy file name and name get assigned value after import or create command
         self._strategy_file_name: str = None
@@ -204,21 +204,22 @@ class HummingbotApplication(*commands):
         #     self.token_list = get_erc20_token_addresses()
 
         # Update for supporting EVMs now requires global_config_map.get('wallets').value[domain] instead of below
-        ethereum_wallet = global_config_map.get("wallets").value["ethereum"]
+        # TODO: wallet per rpc_urls.keys(), or domain in self.wallets.keys()
+        domain = "ethereum"
+        ethereum_wallet = global_config_map.get("wallets").value[domain]
         private_key = Security._private_keys[ethereum_wallet]
 
         rpc_urls = global_config_map.get("rpc_urls").value
-        ethereum_rpc_url = rpc_urls["ethereum"]
-        evm_rpc_url = rpc_urls["evm"]
+        rpc_url = rpc_urls[domain]
         erc20_token_addresses = {t: l[0] for t, l in self.token_list.items() if t in token_trading_pairs}
 
-        chain_name: str = global_config_map.get("chain_names").value['ethereum']
+        chain_name: str = global_config_map.get("chain_names").value[domain]
         chain = getattr(EthereumChain, chain_name)
         self.logger().warning('chain', chain)
 
-        self.wallet: Web3Wallet = Web3Wallet(
+        self.wallets[domain]: Web3Wallet = Web3Wallet(
             private_key=private_key,
-            backend_urls=[ethereum_rpc_url, evm_rpc_url],  # TODO: [v for v in rpc_urls.values()] ?
+            backend_urls=[rpc_url],
             erc20_token_addresses=erc20_token_addresses,
             chain=chain,
         )
@@ -266,8 +267,8 @@ class HummingbotApplication(*commands):
                         private_key = get_eth_wallet_private_key(domain)
                         init_params.update(wallet_private_key=private_key, evm_rpc_url=evm_rpc_url)
                     else:
-                        assert self.wallet is not None
-                        init_params.update(wallet=self.wallet, evm_rpc_url=evm_rpc_url)
+                        assert domain in self.wallets
+                        init_params.update(wallet=self.wallets[domain], evm_rpc_url=evm_rpc_url)
 
                 connector_class = get_connector_class(connector_name)
                 connector = connector_class(**init_params)

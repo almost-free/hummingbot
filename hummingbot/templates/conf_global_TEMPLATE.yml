@@ -113,6 +113,11 @@ chains:
 chain_names:
   ethereum: MAIN_NET
 
+gas_tokens:
+  ethereum: "ETH"
+
+gas_token_minimums:
+  ethereum: 0.01
 
 # Kill switch
 kill_switch_enabled: null

@@ -177,6 +177,16 @@ main_config_map = {
                   prompt="What are your preferred EVM-compatible chain names (e.g. MAIN_NET)? >>> ",
                   type_str="json",
                   required_if=lambda: False),
+    "gas_tokens":
+        ConfigVar(key="gas_tokens",
+                  prompt="Specify EVM-compatible gas tokens per chain (e.g. for ethereum -> ETH) >>> ",
+                  type_str="json",
+                  required_if=lambda: False),
+    "gas_token_minimums":
+        ConfigVar(key="gas_token_minimums",
+                  prompt="Specify EVM-compatible gas token minimum amounts required >>> ",
+                  type_str="json",
+                  required_if=lambda: False),
     # Whether or not to invoke cancel_all on exit if marketing making on a open order book DEX (e.g. Radar Relay)
     "on_chain_cancel_on_exit":
         ConfigVar(key="on_chain_cancel_on_exit",

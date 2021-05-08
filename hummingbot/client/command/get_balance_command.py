@@ -9,8 +9,8 @@ if TYPE_CHECKING:
 
 class GetBalanceCommand:
     def get_wallet_balance(self,  # type: HummingbotApplication
-                           ) -> pd.DataFrame:
-        return pd.DataFrame(data=list(self.wallet.get_all_balances().items()),
+                           domain: str) -> pd.DataFrame:
+        return pd.DataFrame(data=list(self.wallets[domain].get_all_balances().items()),
                             columns=["currency", "balance"]).set_index("currency")
 
     def get_exchange_balance(self,  # type: HummingbotApplication
@@ -23,14 +23,17 @@ class GetBalanceCommand:
     def get_balance(self,  # type: HummingbotApplication
                     currency: str = "WETH",
                     wallet: bool = False,
-                    exchange: str = None):
+                    exchange: str = None,
+                    domain: str = "ethereum"):
         if wallet:
-            if self.wallet is None:
-                self._notify('Wallet not available. Please configure your wallet (Enter "config wallet")')
+            if self.wallets is None:
+                self._notify('Wallet not available. Please configure a wallet. (Enter "config wallet")')
+            elif domain not in self.wallets:
+                self._notify(f"{domain} not found in wallets, please configure a wallet for {domain}")
             elif currency is None:
-                self._notify(f"{self.get_wallet_balance()}")
+                self._notify(f"{self.get_wallet_balance(domain)}")
             else:
-                self._notify(self.wallet.get_balance(currency.upper()))
+                self._notify(self.wallets[domain].get_balance(currency.upper()))
         elif exchange:
             if exchange in self.markets:
                 if currency is None:
