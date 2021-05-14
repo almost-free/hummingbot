@@ -9,7 +9,6 @@ from hummingbot.client.config.config_helpers import (
     save_to_yml
 )
 from hummingbot.client.config.config_validators import validate_decimal, validate_exchange
-from hummingbot.client.settings import ethereum_required
 from hummingbot.market.celo.celo_cli import CeloCLI
 from hummingbot.client.performance import smart_round
 from hummingbot.core.rate_oracle.rate_oracle import RateOracle
@@ -120,21 +119,11 @@ class BalanceCommand:
             for domain in wallets.keys():
                 address = wallets[domain]
                 if address is not None:
-                    if domain == "ethereum" and ethereum_required():
-                        eth_df = await self.ethereum_balances_df()
-                        lines = ["    " + line for line in eth_df.to_string(index=False).split("\n")]
-                        self._notify("\nethereum:")
-                        self._notify("\n".join(lines))
-                    else:
-                        evm_chain = global_config_map.get("chains").value[domain]
-                        # TODO:
-                        if domain == "xdai":
-                            evm_df = await self.xdai_balances_df()
-                        else:
-                            evm_df = await self.evm_balances_df(domain)
-                        lines = ["    " + line for line in evm_df.to_string(index=False).split("\n")]
-                        self._notify(f"\n${domain} ({evm_chain}):")
-                        self._notify("\n".join(lines))
+                    evm_df = await self.evm_balances_df(domain)
+                    lines = ["    " + line for line in evm_df.to_string(index=False).split("\n")]
+                    evm_chain = global_config_map.get("chains").value[domain]
+                    self._notify(f"\n${domain} ({evm_chain}):")
+                    self._notify("\n".join(lines))
 
     async def exchange_balances_extra_df(self,  # type: HummingbotApplication
                                          ex_balances: Dict[str, Decimal],
@@ -170,20 +159,6 @@ class BalanceCommand:
         df.sort_values(by=["Asset"], inplace=True)
         return df
 
-    async def ethereum_balances_df(self,  # type: HummingbotApplication
-                                   ):
-        rows = []
-        if ethereum_required_trading_pairs():
-            bals = await UserBalances.eth_n_erc20_balances()
-            for token, bal in bals.items():
-                rows.append({"Asset": token, "Amount": round(bal, 4)})
-        else:
-            eth_bal = UserBalances.evm_balance()
-            rows.append({"Asset": "ETH", "Amount": round(eth_bal, 4)})
-        df = pd.DataFrame(data=rows, columns=["Asset", "Amount"])
-        df.sort_values(by=["Asset"], inplace=True)
-        return df
-
     async def evm_balances_df(self,  # type: HummingbotApplication
                               domain: str):
         rows = []
@@ -193,19 +168,9 @@ class BalanceCommand:
                 rows.append({"Asset": token, "Amount": round(bal, 4)})
         else:
             evm_bal = UserBalances.evm_balance(domain)
-            # gas_token = global_config_map.get("gas_tokens")[domain]
+            gas_token = global_config_map.get("gas_tokens")[domain]
             # fee_asset = ("evm_fee_asset" in global_config_map is not None else global_config_map['evm_fee_asset']) or 'FEE_TOKEN'
-            rows.append({"Asset": "native gas token", "Amount": round(evm_bal, 4)})
-        df = pd.DataFrame(data=rows, columns=["Asset", "Amount"])
-        df.sort_values(by=["Asset"], inplace=True)
-        return df
-
-    async def xdai_balances_df(self,  # type: HummingbotApplication
-                               ):
-        rows = []
-        bals = await UserBalances.xdai_balances()
-        for token, bal in bals.items():
-            rows.append({"Asset": token, "Amount": round(bal, 4)})
+            rows.append({"Asset": gas_token, "Amount": round(evm_bal, 4)})
         df = pd.DataFrame(data=rows, columns=["Asset", "Amount"])
         df.sort_values(by=["Asset"], inplace=True)
         return df

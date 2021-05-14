@@ -119,6 +119,10 @@ class UserBalances:
 
     @staticmethod
     async def eth_n_erc20_balances(domain = "ethereum") -> Dict[str, Decimal]:
+
+        if domain == "xdai":
+            return await UserBalances.xdai_balances()
+
         evm_rpc_url = global_config_map.get("rpc_urls").value[domain]
         # if prefix == "evm":
         #     connector = EvmUniswapConnector(ethereum_required_trading_pairs,
